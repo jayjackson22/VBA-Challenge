@@ -1,0 +1,135 @@
+Sub main()
+    Application.ScreenUpdating = False
+    
+    Dim r, sumRow As Long
+    Dim openPrice, closePrice, yearChange, totalVol, greatestInc, greatestDec, greatestVol As Double
+    Dim greatestIncTicker, greatestDecTicker, greatestVolTicker As String
+    Dim WS_Count As Integer
+    
+    WS_Count = ActiveWorkbook.Worksheets.Count
+    
+    'Loop through Workbook
+    For j = 1 To WS_Count
+    Worksheets(ActiveWorkbook.Worksheets(j).Name).Activate
+    
+    'row no for summary data
+    sumRow = 2
+    
+    'Total Rows
+    r = Range("A1").End(xlDown).Row
+    
+    'Set Headers
+    Range("I1").Value = "Ticker"
+    Range("J1").Value = "Yearly Change"
+    Range("K1").Value = "Percent Change"
+    Range("L1").Value = "Total Stock Volume"
+    
+        'Loop through Sheet
+        For i = 2 To r
+            'If this is the first row
+            If Cells(i, 1).Value <> Cells(i - 1, 1).Value Then
+                
+                'Submit ticker
+                Cells(sumRow, 9).Value = Cells(i, 1).Value
+                
+                'Set openPrice
+                openPrice = Cells(i, 3).Value
+                
+                'Reset volume to first row volume
+                totalVol = Cells(i, 7).Value
+            
+            'ElseIf this is the last row
+            ElseIf Cells(i, 1).Value <> Cells(i + 1, 1).Value Then
+                'Set closePrice
+                closePrice = Cells(i, 6).Value
+                
+                'Set yearChange
+                yearChange = closePrice - openPrice
+                
+                'Submit Yearly Change
+                Cells(sumRow, 10).Value = yearChange
+                If yearChange >= 0 Then
+                    Cells(sumRow, 10).Interior.ColorIndex = 4
+                Else
+                    Cells(sumRow, 10).Interior.ColorIndex = 3
+                End If
+                           
+                'Submit Yearly % Change
+                If openPrice = 0 Then
+                    Cells(sumRow, 11).Value = 0
+                Else:
+                    Cells(sumRow, 11).Value = yearChange / openPrice
+                End If
+                
+                Cells(sumRow, 11).NumberFormat = "0.00%"
+                
+                'Update row totalVolume
+                totalVol = totalVol + Cells(i, 7).Value
+                
+                'Submit Total Volume
+                Cells(sumRow, 12).Value = totalVol
+                
+                'Set sumRow to next
+                sumRow = sumRow + 1
+                       
+            'Else is not first or last row
+            Else
+                totalVol = totalVol + Cells(i, 7).Value
+            End If
+        Next i
+    Next j
+
+    
+    
+    'Challenge
+    For j = 1 To WS_Count
+    Worksheets(ActiveWorkbook.Worksheets(j).Name).Activate
+    
+    Range("N2").Value = "Greatest % Increase"
+    Range("N3").Value = "Greatest % Decrease"
+    Range("N4").Value = "Greatest Total Volume"
+    Range("O1").Value = "Ticker"
+    Range("P1").Value = "Value"
+    
+    greatestInc = -1000
+    greatestDec = 1000
+    greatestVol = 0
+        
+        
+        For i = 2 To (sumRow - 1)
+            If Cells(i, 11).Value > greatestInc Then
+                greatestInc = Cells(i, 11).Value
+                greatestIncTicker = Cells(i, 9).Value
+            End If
+            
+            If Cells(i, 11).Value < greatestDec Then
+                greatestDec = Cells(i, 11).Value
+                greatestDecTicker = Cells(i, 9).Value
+            End If
+            
+            If Cells(i, 12).Value > greatestVol Then
+                greatestVol = Cells(i, 12).Value
+                greatestVolTicker = Cells(i, 9).Value
+            End If
+        Next i
+       
+        'Tickers
+        Range("O2").Value = greatestIncTicker
+        Range("O3").Value = greatestDecTicker
+        Range("O4").Value = greatestVolTicker
+        
+        'Values
+        Range("P2").Value = greatestInc
+        Range("P2").NumberFormat = "0.00%"
+        Range("P3").Value = greatestDec
+        Range("P3").NumberFormat = "0.00%"
+        Range("P4").Value = greatestVol
+        
+        Range("A1").Activate
+        Columns("A:P").AutoFit
+        
+    Next j
+
+    Worksheets(ActiveWorkbook.Worksheets(1).Name).Activate
+    Application.ScreenUpdating = True
+End Sub
